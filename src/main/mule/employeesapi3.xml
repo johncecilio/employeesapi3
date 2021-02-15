@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="96cb0ddb-47ff-4e56-b59b-7a966378470b" basePath="api" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="LocalOracleHRDatabase_Config" doc:name="Database Config" doc:id="79ba6a60-f304-44b4-bd84-291345949639" >
+		<db:oracle-connection host="host.docker.internal" port="49161" user="hr" password="oracle" instance="xe" />
+	</db:config>
+	<flow name="employeesapi3Flow" doc:id="cb1d13cf-7793-4c08-882b-238205cd355c" >
+		<http:listener doc:name="Listener" doc:id="69031360-259a-4ac4-a1b0-a95d527d5dbc" config-ref="HTTP_Listener_config" path="/employees"/>
+		<db:select doc:name="Select" doc:id="5e3542b2-2e03-42e4-89b6-374de5d15e5f" config-ref="LocalOracleHRDatabase_Config">
+			<db:sql ><![CDATA[SELECT * FROM employees]]></db:sql>
+		</db:select>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="Set Payload" doc:id="5cb3947c-a5ed-47fd-8ac1-f4e820d4e80a" />
+	</flow>
+	<flow name="employeesapi3Flow1" doc:id="dee2f284-afd6-423a-9b13-2421cf297d1e" >
+		<http:listener doc:name="Listener" doc:id="75ff0a43-bba9-4bed-80ae-d0a292a5efb6" config-ref="HTTP_Listener_config" path="/employees/{id}"/>
+		<db:select doc:name="Select" doc:id="eb79013e-1779-483a-b976-9a97223a5d2b" config-ref="LocalOracleHRDatabase_Config">
+			<db:sql ><![CDATA[SELECT * FROM employees where employee_id = :id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+"id":attributes.uriParams.id
+}]]]></db:input-parameters>
+		</db:select>
+		<set-payload value="#[output application/json&#10;---&#10;payload]" doc:name="Set Payload" doc:id="e726093b-48a0-4f06-8f6f-f6c9c83c53fa" />
+	</flow>
+</mule>
